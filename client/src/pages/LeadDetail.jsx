@@ -25,7 +25,7 @@ const LeadDetail = () => {
 
   const fetchNotes = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/leads/${id}/notes`);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/leads/${id}/notes`);
       setNotes(res.data.data);
     } catch (err) {
       console.error(err);
@@ -37,7 +37,7 @@ const LeadDetail = () => {
     if (!noteText.trim()) return;
     
     try {
-      await axios.post(`http://localhost:5000/api/leads/${id}/notes`, {
+      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/leads/${id}/notes`, {
         noteText, followUpDate, followUpTime, isFollowUp
       });
       setNoteText('');
@@ -52,7 +52,7 @@ const LeadDetail = () => {
 
   const updateLeadStatus = async (newStatus) => {
     try {
-      await axios.put(`http://localhost:5000/api/leads/${id}`, { status: newStatus });
+      await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/leads/${id}`, { status: newStatus });
       dispatch(getLeadAuth(id));
     } catch (err) {
       console.error(err);

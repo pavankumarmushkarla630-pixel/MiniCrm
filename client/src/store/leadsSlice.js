@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/leads';
+const API_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/leads`;
 
 export const getLeads = createAsyncThunk('leads/getAll', async (queryStr = '', thunkAPI) => {
   try {
@@ -36,7 +36,7 @@ export const createLead = createAsyncThunk('leads/create', async (leadData, thun
 // Followups
 export const getFollowups = createAsyncThunk('leads/followups', async (range = 'this_week', thunkAPI) => {
   try {
-    const response = await axios.get(`http://localhost:5000/api/followups?range=${range}`);
+    const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/followups?range=${range}`);
     return response.data.data;
   } catch (error) {
     const message = error.response?.data?.error?.message || error.message;
