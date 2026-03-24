@@ -22,7 +22,12 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.includes(origin) || origin.endsWith('.netlify.app')) {
+    if (
+      allowedOrigins.includes(origin) || 
+      (origin && origin.endsWith('.netlify.app')) ||
+      (origin && origin.startsWith('http://localhost:')) ||
+      (origin && origin.startsWith('http://127.0.0.1:'))
+    ) {
       callback(null, true);
     } else {
       console.warn(`Blocked by CORS: ${origin}`);
