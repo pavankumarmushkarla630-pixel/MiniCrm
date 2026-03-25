@@ -1,11 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getLeadAuth } from '../store/leadsSlice';
+import { getLeadAuth, updateLead } from '../store/leadsSlice';
 import axios from 'axios';
 import StatusBadge from '../components/StatusBadge';
 import PriorityDot from '../components/PriorityDot';
 import NoteTimeline from '../components/NoteTimeline';
+
+const BASE_URL = import.meta.env.VITE_API_URL || '';
+
+const getAuthHeaders = () => {
+  const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
+  return user?.token ? { Authorization: `Bearer ${user.token}` } : {};
+};
 
 const LeadDetail = () => {
   const { id } = useParams();
@@ -17,6 +24,7 @@ const LeadDetail = () => {
   const [followUpDate, setFollowUpDate] = useState('');
   const [followUpTime, setFollowUpTime] = useState('');
   const [isFollowUp, setIsFollowUp] = useState(false);
+  const [notesLoading, setNotesLoading] = useState(false);
 
   useEffect(() => {
     dispatch(getLeadAuth(id));
@@ -24,11 +32,14 @@ const LeadDetail = () => {
   }, [dispatch, id]);
 
   const fetchNotes = async () => {
+    setNotesLoading(true);
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/leads/${id}/notes`);
+      const res = await axios.get(`${BASE_URL}/api/leads/${id}/notes`, { headers: getAuthHeaders() });
       setNotes(res.data.data);
     } catch (err) {
       console.error(err);
+    } finally {
+      setNotesLoading(false);
     }
   };
 
@@ -37,9 +48,9 @@ const LeadDetail = () => {
     if (!noteText.trim()) return;
     
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/leads/${id}/notes`, {
+      await axios.post(`${BASE_URL}/api/leads/${id}/notes`, {
         noteText, followUpDate, followUpTime, isFollowUp
-      });
+      }, { headers: getAuthHeaders() });
       setNoteText('');
       setFollowUpDate('');
       setFollowUpTime('');
@@ -51,9 +62,13 @@ const LeadDetail = () => {
   };
 
   const updateLeadStatus = async (newStatus) => {
+    dispatch(updateLead({ id, data: { status: newStatus } }));
+  };
+
+  const handleDeleteNote = async (noteId) => {
     try {
-      await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/leads/${id}`, { status: newStatus });
-      dispatch(getLeadAuth(id));
+      await axios.delete(`${BASE_URL}/api/leads/${id}/notes/${noteId}`, { headers: getAuthHeaders() });
+      fetchNotes();
     } catch (err) {
       console.error(err);
     }
@@ -162,7 +177,10 @@ const LeadDetail = () => {
         </div>
 
         <h3 className='text-lg font-serif italic text-textPrimary tracking-wide mb-6 px-2'>Activity Timeline</h3>
-        <NoteTimeline notes={notes} />
+        {notesLoading
+          ? <div className='text-center text-textMuted py-6'>Loading notes...</div>
+          : <NoteTimeline notes={notes} onDelete={handleDeleteNote} />
+        }
       </div>
     </div>
   );
