@@ -10,10 +10,11 @@ const generateToken = (id) => {
 };
 
 const setTokenCookie = (res, token) => {
+  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('jwt', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'strict', // 'none' required for cross-origin (Netlify → Render)
     maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
   });
 };

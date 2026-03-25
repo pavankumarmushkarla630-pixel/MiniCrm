@@ -4,11 +4,15 @@ import axios from 'axios';
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_URL = `${BASE_URL}/api/auth`;
 
-// Setup axios defaults conditionally
 axios.defaults.withCredentials = true;
 
+// Persist user across page refreshes
+const userFromStorage = localStorage.getItem('user')
+  ? JSON.parse(localStorage.getItem('user'))
+  : null;
+
 const initialState = {
-  user: null,
+  user: userFromStorage,
   isError: false,
   isSuccess: false,
   isLoading: false,
@@ -38,6 +42,7 @@ export const login = createAsyncThunk('auth/login', async (user, thunkAPI) => {
 export const logout = createAsyncThunk('auth/logout', async (_, thunkAPI) => {
   try {
     await axios.post(`${API_URL}/logout`);
+    localStorage.removeItem('user');
     return null;
   } catch (error) {
     console.error(error);
@@ -67,6 +72,7 @@ export const authSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.user = action.payload;
+        localStorage.setItem('user', JSON.stringify(action.payload));
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
@@ -81,6 +87,7 @@ export const authSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.user = action.payload;
+        localStorage.setItem('user', JSON.stringify(action.payload));
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
