@@ -4,6 +4,11 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import connectDB from './config/db.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
+import authRoutes from './routes/authRoutes.js';
+import leadRoutes from './routes/leadRoutes.js';
+import noteRoutes from './routes/noteRoutes.js';
+import followupRoutes from './routes/followupRoutes.js';
+import activityRoutes from './routes/activityRoutes.js';
 
 dotenv.config();
 
@@ -19,11 +24,9 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
     if (
-      allowedOrigins.includes(origin) || 
+      allowedOrigins.includes(origin) ||
       (origin && origin.endsWith('.netlify.app')) ||
       (origin && origin.startsWith('http://localhost:')) ||
       (origin && origin.startsWith('http://127.0.0.1:'))
@@ -39,24 +42,16 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// Base Route
 app.get('/', (req, res) => {
   res.send('Mini CRM API is running...');
 });
 
-// Import Routes
-import authRoutes from './routes/authRoutes.js';
-import leadRoutes from './routes/leadRoutes.js';
-import noteRoutes from './routes/noteRoutes.js';
-import followupRoutes from './routes/followupRoutes.js';
-
-// Mount Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/leads/:id/notes', noteRoutes);
 app.use('/api/followups', followupRoutes);
+app.use('/api/activities', activityRoutes);
 
-// Error Middleware
 app.use(notFound);
 app.use(errorHandler);
 
