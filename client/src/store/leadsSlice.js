@@ -4,9 +4,15 @@ import axios from 'axios';
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_URL = `${BASE_URL}/api/leads`;
 
+// Helper: get auth headers from localStorage
+const getAuthHeaders = () => {
+  const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
+  return user?.token ? { Authorization: `Bearer ${user.token}` } : {};
+};
+
 export const getLeads = createAsyncThunk('leads/getAll', async (queryStr = '', thunkAPI) => {
   try {
-    const response = await axios.get(`${API_URL}?${queryStr}`);
+    const response = await axios.get(`${API_URL}?${queryStr}`, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     const message = error.response?.data?.error?.message || error.message;
@@ -16,7 +22,7 @@ export const getLeads = createAsyncThunk('leads/getAll', async (queryStr = '', t
 
 export const getLeadAuth = createAsyncThunk('leads/getOne', async (id, thunkAPI) => {
   try {
-    const response = await axios.get(`${API_URL}/${id}`);
+    const response = await axios.get(`${API_URL}/${id}`, { headers: getAuthHeaders() });
     return response.data.data;
   } catch (error) {
     const message = error.response?.data?.error?.message || error.message;
@@ -26,8 +32,28 @@ export const getLeadAuth = createAsyncThunk('leads/getOne', async (id, thunkAPI)
 
 export const createLead = createAsyncThunk('leads/create', async (leadData, thunkAPI) => {
   try {
-    const response = await axios.post(API_URL, leadData);
+    const response = await axios.post(API_URL, leadData, { headers: getAuthHeaders() });
     return response.data.data;
+  } catch (error) {
+    const message = error.response?.data?.error?.message || error.message;
+    return thunkAPI.rejectWithValue(message);
+  }
+});
+
+export const updateLead = createAsyncThunk('leads/update', async ({ id, data }, thunkAPI) => {
+  try {
+    const response = await axios.put(`${API_URL}/${id}`, data, { headers: getAuthHeaders() });
+    return response.data.data;
+  } catch (error) {
+    const message = error.response?.data?.error?.message || error.message;
+    return thunkAPI.rejectWithValue(message);
+  }
+});
+
+export const deleteLead = createAsyncThunk('leads/delete', async (id, thunkAPI) => {
+  try {
+    await axios.delete(`${API_URL}/${id}`, { headers: getAuthHeaders() });
+    return id;
   } catch (error) {
     const message = error.response?.data?.error?.message || error.message;
     return thunkAPI.rejectWithValue(message);
@@ -37,7 +63,7 @@ export const createLead = createAsyncThunk('leads/create', async (leadData, thun
 // Followups
 export const getFollowups = createAsyncThunk('leads/followups', async (range = 'this_week', thunkAPI) => {
   try {
-    const response = await axios.get(`${BASE_URL}/api/followups?range=${range}`);
+    const response = await axios.get(`${BASE_URL}/api/followups?range=${range}`, { headers: getAuthHeaders() });
     return response.data.data;
   } catch (error) {
     const message = error.response?.data?.error?.message || error.message;
@@ -84,6 +110,14 @@ export const leadsSlice = createSlice({
       .addCase(createLead.fulfilled, (state, action) => {
         state.isSuccess = true;
         state.leads = [action.payload, ...state.leads];
+      })
+      .addCase(updateLead.fulfilled, (state, action) => {
+        state.isSuccess = true;
+        state.leads = state.leads.map(l => l._id === action.payload._id ? action.payload : l);
+        if (state.currentLead?._id === action.payload._id) state.currentLead = action.payload;
+      })
+      .addCase(deleteLead.fulfilled, (state, action) => {
+        state.leads = state.leads.filter(l => l._id !== action.payload);
       })
       .addCase(getLeadAuth.fulfilled, (state, action) => {
         state.currentLead = action.payload;
