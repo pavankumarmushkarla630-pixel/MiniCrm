@@ -25,7 +25,7 @@ export const getFollowups = asyncHandler(async (req, res) => {
     query.followUpDate = { $gte: today, $lt: tomorrow };
   } else if (range === 'overdue') {
     query.followUpDate = { $lt: today };
-  } else if (range === 'week') {
+  } else if (range === 'week' || range === 'this_week') {
     query.followUpDate = { $gte: tomorrow, $lt: nextWeek }; // Upcoming within a week (excluding today)
   }
 

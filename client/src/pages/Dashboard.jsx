@@ -29,7 +29,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     dispatch(getLeads(filterStr));
-    dispatch(getFollowups('this_week'));
+    dispatch(getFollowups('week'));
   }, [dispatch, filterStr]);
 
   // Derive metrics

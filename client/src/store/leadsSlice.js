@@ -61,7 +61,7 @@ export const deleteLead = createAsyncThunk('leads/delete', async (id, thunkAPI) 
 });
 
 // Followups
-export const getFollowups = createAsyncThunk('leads/followups', async (range = 'this_week', thunkAPI) => {
+export const getFollowups = createAsyncThunk('leads/followups', async (range = 'week', thunkAPI) => {
   try {
     const response = await axios.get(`${BASE_URL}/api/followups?range=${range}`, { headers: getAuthHeaders() });
     return response.data.data;
